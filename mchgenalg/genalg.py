@@ -11,7 +11,9 @@ import numpy as np
 
 # Создается класс. Где создаются экземпляры? Вообще интерфейс совпадает с тестовым исходником
 class GeneticAlgorithm():
-    def __init__(self, fitness_function):  # Инициализация. Аналог интерфейса
+
+    # Инициализация. Аналог интерфейса
+    def __init__(self, fitness_function): 
         self.population = None
         self.fitness_function = fitness_function
         self.number_of_pairs = None
@@ -20,62 +22,73 @@ class GeneticAlgorithm():
         # Если 2-е родителей с одинаковым генотипом, заменить их случайными.
         self.allow_random_parent = True
         # Использовать одноточечный кроссинговер вместо равномерного
-        self.single_point_cross_over = False
-
-    def generate_binary_population(self, size, genome_length):  # Генерация бинарной популяции
+        self.single_point_cross_over = True
         
+    # 1) Генерация бинарной популяции 
+    def generate_binary_population(self, size, genome_length):        
         # тип, по умолчанию, long
         self.population = np.random.randint(0, 2, (size, genome_length))
         self._update_fitness_vector()
         return self.population
-
-    def _generate_individual(self, genome_length):  # Генерация особей, почему логический тип?
-        return np.random.randint(0, 2, (genome_length), dtype=bool
-                                 )
-    def get_fitness_vector(self):  # Функция пригодности
+    
+    # Зачем? Генерация особей, почему логический тип?
+    def _generate_individual(self, genome_length):  
+        return np.random.randint(0, 2, (genome_length), dtype=bool)
+    
+    # 2) Функция пригодности. Зачем разбита на 3?
+    def get_fitness_vector(self):  
         return self.fitness_vector
-
-    def _update_fitness_vector(self):  # Обновление функции пригодности
-        self.fitness_vector = [self.get_fitness(genom) for genom in self.population]
+    def _update_fitness_vector(self):  # Зачем? Обновление функции пригодности
+        self.fitness_vector = [self.get_fitness(genom) for genom in self.population]      
     def get_fitness(self, genome):
         return self.fitness_function(genome)
 
-    def get_best_genome(self):  # Отбор
+    # 3) Взять лучший геном. Отбор ли?
+    def get_best_genome(self): 
         self.best_genome = np.argmax(self.fitness_vector)
         return self.population[self.best_genome], self.fitness_vector[self.best_genome]
 
-    def run(self, iterations=1):  # Возможно, запуск ГА
+    # 4) Запуск ГА
+    def run(self, iterations=1):  
+        # На случай ошибок:
         if self.population is None:
             raise RuntimeError("Population has not been generated yet.")
         if not self.number_of_pairs:
             raise RuntimeError("The number of pairs (number_of_pairs) to be generated has not been configured.")
-
+        
+        # Итерации, похоже, генерация потомства
         for iteration in range(iterations):
+            # Из выбранных родителей
             parent_pairs = self._select_parents(self.number_of_pairs, self._get_parent_probabilities())
             for parent_pair in parent_pairs:
+                # Генерация детей
                 children = self._generate_children(parent_pair)
+                # Процесс мутации
                 mutated_children = [self._mutate(child, self.mutation_rate) for child in children]
-                # Possible changes here (combine with tabu search?)
+                # Возможные изменения (в сочетании с поиском табу?)
                 for child in mutated_children:
                     child_fitness = self.get_fitness(child)
-                    worst_genome = np.argmin(self.fitness_vector)
+                    # Самый нелучший. Зачем?
+                    worst_genome = np.argmin(self.fitness_vector) 
                     if self.get_fitness_vector()[worst_genome] < child_fitness:
                         self.population[worst_genome] = child
                         self.get_fitness_vector()[worst_genome] = child_fitness
 
-    def _get_parent_probabilities(self):  # Возможности родителей. Возможно, селект
+    # 5) Ранжировка родителей в соотвествии с фитнес-вектором.
+    def _get_parent_probabilities(self):  
         # 2 − SP + 2* (SP −1)* (rank(i) −1) /(N −1)
         relative_fitness = self.fitness_vector / np.sum(self.fitness_vector)
         ranks_asc = np.argsort(relative_fitness)
         return np.array([2 - self.selective_pressure + 2 * (self.selective_pressure - 1)
                          * (ranks_asc[-i] - 1) / (len(ranks_asc) - 1) for i in range(len(ranks_asc))])
 
-    def _generate_children(self, parent_pair):  # Получение популяции детей. Возможно, скрещивание
+    # 6) Получение популяции детей: скрещивание
+    def _generate_children(self, parent_pair):  
         parent1 = parent_pair[0]
         parent2 = parent_pair[1]
         if self.single_point_cross_over:
             cutAfter = np.random.randint(0, len(self.population[0]) - 1)
-            # Concatenate returns two arrays joined together as a new array
+            # Возвращает массив, состоящий из 2-х
             return (np.concatenate((parent1[0:cutAfter + 1], parent2[cutAfter + 1:])),
                     np.concatenate((parent2[0:cutAfter + 1], parent1[cutAfter + 1:])))
         else:
