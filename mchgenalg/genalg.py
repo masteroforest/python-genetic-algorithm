@@ -7,25 +7,25 @@ Based on Martin Chovanec's work at the Università della Svizzera italiana on Su
 import numpy as np
 
 
-# Глобальный вопрос: откуда приходит Геном?
+# Глобальный вопрос: откуда приходит Геном. Он формируется в бинарной популяции.
 
 # Создается класс. Где создаются экземпляры? Вообще интерфейс совпадает с тестовым исходником
 class GeneticAlgorithm():
-    def __init__(self, fitness_function):  # Инициализация
+    def __init__(self, fitness_function):  # Инициализация. Аналог интерфейса
         self.population = None
         self.fitness_function = fitness_function
         self.number_of_pairs = None
         self.mutation_rate = 0.005
         self.selective_pressure = 1.5
-        # If two parents have the same genotype, ignore them and generate TWO random parents. Где запуск?
+        # Если 2-е родителей с одинаковым генотипом, заменить их случайными.
         self.allow_random_parent = True
-        # Use single point crossover instead of uniform crossover
+        # Использовать одноточечный кроссинговер вместо равномерного
         self.single_point_cross_over = False
 
-    def generate_binary_population(self, size, genome_length):  # Генерация бинарной популяции!!! Вроде, здесь уже TRUE, FALSE
+    def generate_binary_population(self, size, genome_length):  # Генерация бинарной популяции
         
         # тип, по умолчанию, long
-        self.population = np.array([[not not x for x in line] for line in np.random.randint(0, 2, (size, genome_length))])
+        self.population = np.random.randint(0, 2, (size, genome_length))
         self._update_fitness_vector()
         return self.population
 
