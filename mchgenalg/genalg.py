@@ -86,15 +86,16 @@ class GeneticAlgorithm():
     def _generate_children(self, parent_pair):  
         parent1 = parent_pair[0]
         parent2 = parent_pair[1]
+        # Для одноточечного кроссинговера
         if self.single_point_cross_over:
             cutAfter = np.random.randint(0, len(self.population[0]) - 1)
             # Возвращает массив, состоящий из 2-х
             return (np.concatenate((parent1[0:cutAfter + 1], parent2[cutAfter + 1:])),
                     np.concatenate((parent2[0:cutAfter + 1], parent1[cutAfter + 1:])))
         else:
-            # Uniform crossover:
-            # randomly generated values smaller than prob => take bit from the first parent to the first child,
-            # >=0.5 take from the second parent to the first child
+            # Универсальный кроссинговер:
+            # случайно сгенерированные значения, меньшие чем prob =>, берут бит от первого родителя до первого потомка,
+            # > = 0.5 взять от второго родителя до первого потомка
             threshold = 0.5
             prob = np.random.rand(len(parent1))
             children = np.ndarray((2, len(parent1)), dtype=bool)
@@ -106,9 +107,10 @@ class GeneticAlgorithm():
             children[1, mask2] = parent1[mask2]
 
             return tuple(children)
+        
 
-
-    def _select_parents(self, number_of_pairs, parent_probabilities):  # Получение родительской популяции
+    # 7) Отбор родителей исходя из функции пригодности
+    def _select_parents(self, number_of_pairs, parent_probabilities):  
         """
         Create an array of pairs (array of parents)
         :param number_of_pairs:
@@ -119,31 +121,40 @@ class GeneticAlgorithm():
         :rtype:
         """
         parent_pairs = []
+        # Получение количества пар
         for pair in range(number_of_pairs):
             parents_idx = []
             parents = []
+            
             while len(parents_idx) != 2:
                 rnd = np.random.rand()
-                for i in range(len(parent_probabilities)):
+                
+                for i in range(len(parent_probabilities)): # Почему длина? parent_probabilities - это 1мер. массив
                     p = parent_probabilities[i]
                     if rnd < p:
-                        parents_idx.append(i)
-                        parents.append(self.population[i].copy())
-                        # If have a pair, we are done
+                        parents_idx.append(i) # Формируется массив в соот с пригодностью
+                        parents.append(self.population[i].copy()) # Родители соотносятся в соот с parents_idx
+                        
+                        # Выход из внут цикла по достижении 2(цели)
                         if (len(parents_idx) == 2):
                             break
-                        # Normalise probability in order to select the other parent as a mate
+                            
+                        # Нормализация возможностей, чтобы выбрать другого родителя для скрещивания
                         parent_probabilities += p / (len(parent_probabilities) - 1)
                         parent_probabilities[i] = 0
-                        # We will return the probability at the end of the while loop
+                        
+                        # Мы вернем возможность в конце цикла while
                         firstParentProbability = p
                         break
+                        
                     else:
                         rnd -= p
-            # The probability of the first parent was set to 0 during searching its mate
-            # Set it back:
+                        
+            # Вероятность первого родителя была установлена на 0 во время поиска скрещивания
+            # Установите его обратно:
             parent_probabilities -= firstParentProbability / (len(parent_probabilities) - 1)
             parent_probabilities[parents_idx[0]] = firstParentProbability
+            
             if self.allow_random_parent and np.all(parents[0] == parents[1]):
                 parents[0] = self._generate_individual(len(parents[0]))
                 parents[1] = self._generate_individual(len(parents[1]))
