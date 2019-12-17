@@ -155,7 +155,7 @@ class GeneticAlgorithm():
             parent_probabilities -= firstParentProbability / (len(parent_probabilities) - 1)
             parent_probabilities[parents_idx[0]] = firstParentProbability
             
-            # Формирование пар для срещивания:
+            # Если родители совпадают, сгенерировать случайных
             if self.allow_random_parent and np.all(parents[0] == parents[1]):
                 parents[0] = self._generate_individual(len(parents[0]))
                 parents[1] = self._generate_individual(len(parents[1]))
@@ -164,7 +164,7 @@ class GeneticAlgorithm():
             # При таком решении может случиться так, что у нас много пар из одной пары
         return parent_pairs
     
-    # Оператор мутации. NumPy. Это вообще работает?
+    # 8) Оператор мутации. NumPy. Это вообще работает?
     def _mutate(self, genome, mutation_rate):  
         rnd = np.random.rand(len(genome))  # Случайная хромосома из Генома
         mutate_at = rnd < mutation_rate  # По идее, логическое число. mutation_rate задается при иниц
